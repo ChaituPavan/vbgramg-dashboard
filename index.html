@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VB-G RAM G works dashboard — TELANGANA</title>
+<style>
+  :root{--ink:#1B2A3A;--soft:#4C5B6B;--faint:#8A96A3;--paper:#FBFAF7;--panel:#fff;--rule:#CDD4DB;
+        --hair:#E6EAEE;--accent:#9E1B4A;--ok:#1E6B4E;--warn:#B4531A;--shade:#F1F3F5;
+        --bar:#2F5D8A;--bar-low:#C0602A;--hl:#FFF8E6;--amber:#FFF6E5;--amber-b:#E7B85C;
+        --s-approved:#8FA9C4;--s-new:#C9B37E;--s-going:#2F5D8A;--s-done:#1E6B4E;--s-phys:#5E9C7F;--s-susp:#B4531A}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-size:15px;line-height:1.5;
+       font-family:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{border-bottom:2px solid var(--ink);background:var(--panel)}
+  .bar{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;
+       justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:600;margin:0} h1 span{color:var(--accent)}
+  .unofficial{font-size:12px;color:var(--soft);margin-top:2px}
+  nav a{color:var(--soft);font-size:13.5px;margin-left:16px;text-decoration:none}
+  main{max-width:1240px;margin:0 auto;padding:16px 24px 48px}
+  @media(max-width:600px){main,.bar{padding-left:16px;padding-right:16px}}
+  button{font:inherit}
+  .act{font-weight:600;font-size:13.5px;padding:8px 14px;cursor:pointer;border:1px solid var(--ink);
+       background:var(--ink);color:#fff;border-radius:0}
+  .act.ghost{background:transparent;color:var(--ink)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  input,select{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:0;width:100%}
+
+  .tabs{display:flex;border-bottom:1px solid var(--rule);margin-bottom:14px}
+  .tabs button{border:0;background:none;padding:10px 16px;font-size:14.5px;font-weight:600;color:var(--soft);
+               cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+
+  .controls{display:grid;grid-template-columns:minmax(240px,1.5fr) minmax(200px,1fr) auto auto;gap:12px 14px;
+            align-items:end;background:var(--panel);border:1px solid var(--rule);padding:12px 14px}
+  .controls.review{grid-template-columns:minmax(200px,1fr) auto}
+  @media(max-width:960px){.controls,.controls.review{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.controls,.controls.review{grid-template-columns:1fr}}
+  .controls label,.lbl{display:block;font-size:12.5px;font-weight:600;margin-bottom:4px;color:var(--soft)}
+  .seg{display:flex;border:1px solid var(--ink)}
+  .seg button{flex:1;border:0;border-right:1px solid var(--ink);background:#fff;color:var(--ink);
+              font-size:13.5px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+  .seg button:last-child{border-right:0} .seg button.on{background:var(--ink);color:#fff}
+
+  .pick{position:relative}
+  .picker{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;
+          font-size:14px;padding:7px 9px;border:1px solid var(--rule);background:#fff;color:var(--ink);cursor:pointer}
+  .picker span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .panel-pop{position:absolute;left:0;top:100%;z-index:20;width:min(660px,94vw);background:#fff;border:1px solid var(--ink);
+             box-shadow:0 8px 24px rgba(27,42,58,.14)}
+  .panel-pop input{border:0;border-bottom:1px solid var(--rule);padding:9px 11px}
+  .treelist{max-height:min(460px,62vh);overflow:auto;font-size:13.5px}
+  .tn{display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;border-bottom:1px solid var(--hair)}
+  .tn:hover,.tn.sel{background:var(--hl)}
+  .tn .tw{width:18px;flex:0 0 18px;color:var(--soft);text-align:center;border:0;background:none;cursor:pointer;padding:0}
+  .tn .nm{flex:1;min-width:0}
+  .tn .lv{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);display:block}
+  .tn small{color:var(--soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tn.zero{color:var(--faint)} .tn.cur{font-weight:600}
+  .tg{position:sticky;top:0;background:var(--shade);font-size:11.5px;font-weight:600;color:var(--soft);
+      text-transform:uppercase;letter-spacing:.04em;padding:5px 10px;border-bottom:1px solid var(--hair);z-index:1}
+  .star{color:#C08A00}
+
+  .results{position:absolute;left:0;right:0;top:100%;z-index:10;background:#fff;border:1px solid var(--ink);
+           border-top:0;max-height:320px;overflow:auto}
+  .results div{padding:7px 10px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--hair)}
+  .results div:hover,.results div.sel{background:var(--hl)}
+  .results small{color:var(--soft);margin-left:6px} .results .tag{font-size:11px;color:var(--faint);text-transform:uppercase;float:right}
+
+  /* sticky context bar: which level of the MoRD list, which place */
+  .ctx{position:sticky;top:0;z-index:15;background:var(--paper);border-bottom:1px solid var(--rule);
+       padding:8px 0 7px;margin:12px 0 0;box-shadow:0 6px 10px -10px rgba(27,42,58,.35)}
+  .ladder{display:flex;flex-wrap:wrap;gap:0;margin:0 0 6px;font-size:11.5px}
+  .ladder span{padding:2px 9px;border:1px solid var(--rule);margin-right:-1px;color:var(--faint);background:#fff;white-space:nowrap}
+  .ladder span.done{color:var(--soft);cursor:pointer} .ladder span.done:hover{background:var(--hl)}
+  .ladder span.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+  .ladder .k{border:0;background:none;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding-left:0;min-width:56px}
+  .crumbs .cseg{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+  .crumbs .lv{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.03em;margin-right:3px}
+  .eyebrow{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+  h2.long{font-size:18px} h2.vlong{font-size:16px}
+  .crumbs{font-size:13.5px;color:var(--soft);margin:2px 0}
+  .crumbs a{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px solid var(--rule);cursor:pointer}
+  .crumbs b{color:var(--ink)} .crumbs .k{display:inline-block;min-width:48px;color:var(--faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+  .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin:14px 0 8px}
+  h2{font-size:21px;margin:4px 0 0;text-wrap:balance}
+  .sub{color:var(--soft);font-size:13px;margin:2px 0 0}
+  .asof{display:inline-block;font-size:12.5px;padding:2px 8px;border:1px solid var(--rule);background:var(--shade);margin-top:6px}
+  .asof.old{border-color:var(--amber-b);background:var(--amber)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  @media(max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .kpi{background:var(--panel);border:1px solid var(--rule);padding:11px 13px;min-width:0}
+  .kpi .l{font-size:12.5px;color:var(--soft);font-weight:600}
+  .kpi .v{font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.25;margin-top:2px}
+  .kpi .n{font-size:12.5px;color:var(--soft)}
+
+  .status-box{background:var(--panel);border:1px solid var(--rule);padding:11px 13px;margin-top:10px}
+  .sbar{display:flex;height:14px;margin:8px 0 6px;background:var(--hair);overflow:hidden}
+  .sbar i{display:block;height:100%;width:0;transition:width .6s ease-out}
+  .slegend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--soft)}
+  .slegend b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .sw{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}
+
+  .attn{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--accent);padding:11px 15px;margin-top:10px}
+  .attn h3{font-size:15px;margin:0 0 4px}
+  .attn .f{padding:7px 0;border-top:1px solid var(--hair)} .attn .f:first-of-type{border-top:0}
+  .attn .t{font-weight:600;font-size:14.5px} .attn .d{font-size:13px;color:var(--soft)}
+  .attn.clear{border-left-color:var(--ok)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{border:1px solid var(--rule);padding:1px 8px;font-size:12.5px;background:var(--shade);cursor:pointer}
+  .chip:hover{background:var(--hl);border-color:var(--warn)}
+  .more{font-size:12.5px;color:var(--accent);cursor:pointer;border:0;background:none;padding:0;font-weight:600}
+  .status{border-left:3px solid var(--rule);padding:8px 12px;margin:10px 0 0;font-size:13.5px;background:var(--panel)}
+  .status.ok{border-color:var(--ok)} .status.bad{border-color:var(--accent)} .status.warn{border-color:var(--warn)}
+  .status summary{display:inline;cursor:pointer;color:var(--soft);font-size:12.5px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--rule);padding:12px 14px;min-width:0}
+  .card h3{font-size:14.5px;margin:0 0 2px} .card .hint{font-size:12.5px;color:var(--soft);margin:0 0 8px}
+  .rank{list-style:none;margin:0;padding:0}
+  .rank li{display:grid;grid-template-columns:22px minmax(90px,1.3fr) 1fr auto;gap:8px;align-items:center;
+           padding:3px 0;font-size:13.5px;cursor:pointer}
+  .rank li:hover .nm{text-decoration:underline}
+  .rank .i{color:var(--soft);font-variant-numeric:tabular-nums}
+  .rank .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank.wrap li{grid-template-columns:22px minmax(130px,2fr) 1fr auto}
+  .rank .code{font-size:11px;font-weight:600;color:var(--accent);margin-right:4px}
+  .rank.wrap .nm{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+  .rank li.cur .nm{font-weight:700} .rank li.cur{background:var(--hl)}
+  .zero-badge{display:inline-block;min-width:26px;text-align:center;font-weight:700;color:#fff;background:#B4531A;padding:0 6px;font-size:12px}
+  .rank .track{height:12px;background:var(--hair);overflow:hidden}
+  .rank .track b{display:block;height:100%;width:0;background:var(--bar);transition:width .7s cubic-bezier(.2,.7,.2,1)}
+  .rank .val{font-variant-numeric:tabular-nums;font-size:13px;min-width:64px;text-align:right}
+  .rank li.none{color:var(--faint)} .rank li.none .val{color:var(--warn);font-weight:600}
+  .rank li.sep{display:block;font-size:12px;color:var(--soft);padding:8px 0 2px;cursor:default;font-weight:600}
+
+  .mx{overflow:auto}
+  .mx table{border-collapse:collapse;font-size:12.5px;min-width:100%}
+  .mx th,.mx td{border:1px solid var(--hair);padding:4px 6px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .mx th{background:var(--shade);font-weight:600;color:var(--soft);text-align:left;white-space:normal;min-width:150px;max-width:220px;
+         vertical-align:bottom;cursor:pointer;user-select:none;line-height:1.3}
+  .mx th .code{display:block;font-size:11px;color:var(--accent)}
+  .mx td:first-child,.mx th:first-child{text-align:left;position:sticky;left:0;background:#fff}
+  .mx th:first-child{background:var(--shade)}
+  .mx td.c0{background:#FBE9E1;color:#8A3A14;font-weight:600}
+  .mx tr.click{cursor:pointer} .mx tr.click:hover td{background:var(--hl)}
+  tr.tot td{font-weight:700;background:#EEF2F6!important;border-bottom:2px solid var(--rule)}
+  .sort{color:var(--faint);font-weight:400;margin-left:3px;white-space:nowrap} th.on .sort{color:var(--ink);font-weight:700}
+  .rank li.dead{cursor:default} .rank li.dead:hover .nm{text-decoration:none}
+
+  table.t{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}
+  table.t th,table.t td{border-bottom:1px solid var(--hair);padding:7px 10px;text-align:left;white-space:nowrap}
+  table.t th{font-size:12.5px;color:var(--soft);font-weight:600;cursor:pointer;user-select:none;border-bottom:1px solid var(--rule)}
+  table.t .num{text-align:right;font-variant-numeric:tabular-nums}
+  table.t tr.click{cursor:pointer} table.t tr.click:hover td{background:var(--hl)}
+  td.z{color:#9AA4AE} td .gp{font-size:12.5px} td .gp.no{color:var(--warn);font-weight:600}
+  .tablewrap{border:1px solid var(--rule);overflow:auto}
+  /* scroll shadows: an inner shadow on the edge that has more columns beyond it */
+  .scrollbox{position:relative;margin-top:10px}
+  .scrollbox::before,.scrollbox::after{content:"";position:absolute;top:1px;bottom:1px;width:22px;pointer-events:none;
+       opacity:0;transition:opacity .2s;z-index:2}
+  .scrollbox::before{left:1px;background:linear-gradient(to right,rgba(27,42,58,.20),rgba(27,42,58,0))}
+  .scrollbox::after{right:1px;background:linear-gradient(to left,rgba(27,42,58,.20),rgba(27,42,58,0))}
+  .scrollbox.more-left::before,.scrollbox.more-right::after{opacity:1}
+
+  .rv-all{background:var(--panel);border:1px solid var(--rule);padding:12px 14px;
+          display:grid;grid-template-columns:minmax(180px,.9fr) 2fr;gap:12px 20px;align-items:center}
+  @media(max-width:760px){.rv-all{grid-template-columns:1fr}}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;margin-top:12px}
+  @media(max-width:420px){.cards{grid-template-columns:1fr}}
+  .fav{background:var(--panel);border:1px solid var(--rule);padding:13px 15px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .fav .path{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fav h3{font-size:16px;margin:0}
+  .fav .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .fav .nums div{font-size:12px;color:var(--soft)} .fav .nums b{display:block;font-size:19px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .fav .line{font-size:13px;border-left:3px solid var(--accent);padding-left:8px}
+  .fav .line.ok{border-left-color:var(--ok)}
+  .fav .mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px}
+  .fav .mini h4{margin:0 0 3px;font-size:12px;color:var(--soft);font-weight:600}
+  .fav .mini a{display:flex;justify-content:space-between;gap:6px;color:var(--ink);text-decoration:none;cursor:pointer;padding:1px 0}
+  .fav .mini a:hover{text-decoration:underline} .fav .mini a span:last-child{font-variant-numeric:tabular-nums}
+  .fav .foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;align-items:center}
+
+  .missing{margin-top:12px;background:var(--amber);border:1px solid var(--amber-b);padding:22px 24px;
+           display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:start}
+  .missing svg{grid-row:span 3;width:42px;height:42px;color:#B4531A}
+  .missing h3{margin:0;font-size:18px} .missing p{margin:0;font-size:14.5px;max-width:62ch}
+  @media(max-width:600px){.missing{grid-template-columns:1fr}.missing svg{grid-row:auto}}
+  .meter{height:8px;background:var(--hair);margin:10px 0 6px;overflow:hidden}
+  .meter b{display:block;height:100%;background:var(--accent);width:0;transition:width .6s ease-out}
+  .meter.wait b{width:30%!important;animation:bounce 1.4s ease-in-out infinite}
+  @keyframes bounce{0%,100%{margin-left:0}50%{margin-left:70%}}
+
+  .skel .kpi .v,.skel .rank{position:relative;color:transparent}
+  .skel .kpi .v::after,.skel .rank::after{content:"";position:absolute;inset:4px 0;
+       background:linear-gradient(90deg,var(--hair),#F6F7F9,var(--hair));background-size:200% 100%;animation:shimmer 1.1s linear infinite}
+  .skel .rank{min-height:100px}
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+  .fade{animation:fadein .3s ease-out} @keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  .foot-row{margin-top:16px;font-size:12.5px;color:var(--soft);display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .hidden,[hidden]{display:none!important}
+  .printonly{display:none}
+  .wl-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0 0}
+  .wl-head h3{font-size:17px;margin:0} .wl-head .n{color:var(--soft);font-weight:400}
+  .head-acts{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .watch{font-weight:600;font-size:13.5px;padding:8px 12px;cursor:pointer;border:1px solid var(--rule);background:#fff;color:var(--ink)}
+  .watch.on{border-color:#C08A00;background:#FFF6DC}
+  .watch.badge{cursor:default}
+  .tn .ws{border:0;background:none;cursor:pointer;color:var(--faint);font-size:15px;padding:0 2px;line-height:1;min-width:18px}
+  .tn .ws.on{color:#C08A00}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;background:var(--ink);color:#fff;
+         padding:10px 14px;font-size:14px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .toast button{background:none;border:0;color:#FFD27A;font-weight:700;cursor:pointer;padding:0}
+  .fav .rm{border:0;background:none;color:var(--soft);cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0;margin-left:auto}
+  @media print{
+    @page{size:A4;margin:12mm}
+    body{background:#fff;font-size:10.5pt}
+    header,.controls,.tabs,#printbtn,.foot-row button,.more,.fav .foot{display:none!important}
+    .printonly{display:block} main{padding:0;max-width:none}
+    .attn,.card,.kpi,.status-box,.fav,.rv-all{break-inside:avoid}
+    .attn .hidden{display:inline!important}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;animation:none!important;transition:none!important}
+  }
+  .printhead{border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:10px;font-size:10pt;color:var(--soft)}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div><h1>VB-G RAM G works dashboard <span>·</span> TELANGANA</h1>
+    <div class="unofficial">Unofficial view built from the public VB-G RAM G MIS (vbgramgrep.dord.gov.in). Not a Government of India website.</div></div>
+  
+</div></header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-v="review">Daily review</button>
+    <button role="tab" data-v="explore">Explore</button>
+  </div>
+
+  <div class="controls" id="controls">
+    <div class="pick" id="what-pick"><span class="lbl" id="w-l">Work</span>
+      <button type="button" class="picker" id="w-btn" aria-haspopup="tree" aria-expanded="false" aria-labelledby="w-l w-name">
+        <span id="w-name">All works</span><span aria-hidden="true">▾</span></button>
+      <div class="panel-pop" id="w-pop" hidden>
+        <input id="w-q" placeholder="Search categories, work types, permissible works…" autocomplete="off" aria-label="Search the work list">
+        <div class="treelist" id="w-tree" role="tree" aria-labelledby="w-l"></div>
+      </div></div>
+    <div class="pick" id="place-pick"><label for="q">Place</label>
+      <input id="q" placeholder="Go to a district, mandal or gram panchayat" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="results">
+      <div class="results" id="results" role="listbox" hidden></div></div>
+    <div><label for="fy">Year</label><select id="fy"></select></div>
+    <div id="rank-box"><span class="lbl">Rank by</span>
+      <div class="seg" id="metric"><button data-m="works" class="on">Works</button><button data-m="expenditure">Expenditure</button></div></div>
+  </div>
+
+  <div id="empty" class="status warn hidden"></div>
+
+  <div id="view">
+    <div class="printonly printhead" id="printhead"></div>
+    <div class="ctx" id="ctx">
+      <div class="ladder" id="ladder" aria-label="Level in the MoRD list"></div>
+      <div class="crumbs" id="crumb-what"></div>
+      <div class="crumbs" id="crumb-where"></div>
+    </div>
+    <div class="head">
+      <div>
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="title"></h2>
+        <div class="sub" id="title-sub"></div>
+        <span class="asof" id="asof"></span>
+      </div>
+      <div class="head-acts"><span id="watch-slot"></span><button class="act ghost" id="printbtn">Print report</button></div>
+    </div>
+
+    <section id="review">
+      <div class="rv-all fade" id="rv-all"></div>
+      <div class="wl-head"><h3>Watchlist <span class="n" id="wl-n"></span></h3>
+        <span class="sub" id="wl-hint"></span></div>
+      <div class="cards" id="cards"></div>
+    </section>
+    <div class="toast hidden" id="toast" role="status" aria-live="polite"><span id="toast-t"></span><button id="toast-undo">Undo</button></div>
+
+    <section id="explore">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Works</div><div class="v" id="k-works">0</div><div class="n" id="k-works-n"></div></div>
+        <div class="kpi"><div class="l">Expenditure</div><div class="v" id="k-exp">0</div><div class="n">₹ lakh</div></div>
+        <div class="kpi"><div class="l">% expenditure</div><div class="v" id="k-pct">0</div><div class="n" id="k-pct-n"></div></div>
+        <div class="kpi"><div class="l" id="k-zero-l">Places with no works</div><div class="v" id="k-zero">—</div><div class="n" id="k-zero-n"></div></div>
+      </div>
+      <div class="status-box" id="status-box"></div>
+      <div class="missing hidden" id="missing" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v6.5l4 2.3" stroke-linecap="round"/></svg>
+        <h3 id="missing-h"></h3><p id="missing-p"></p><div id="missing-acts"></div>
+      </div>
+      <div id="attention"></div>
+      <div id="notes"></div>
+      <div class="grid2">
+        <div class="card"><h3 id="what-h"></h3><p class="hint" id="what-hint"></p><ul class="rank wrap" id="what-list"></ul></div>
+        <div class="card" id="where-card"><h3 id="where-h"></h3><p class="hint" id="where-hint"></p><ul class="rank" id="where-list"></ul></div>
+      </div>
+      <div class="card" id="mx-card" style="margin-top:10px"><h3 id="mx-h"></h3><p class="hint" id="mx-hint"></p>
+        <div class="scrollbox" style="margin-top:6px"><div class="mx" id="mx"></div></div></div>
+      <div class="scrollbox"><div class="tablewrap" id="tablewrap"><table class="t" id="tbl"><thead></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <div class="foot-row">
+      <span></span>
+      <span><span class="refresh-msg"></span></span>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const STATIC = true;
+const BASE = STATIC ? 'data/' : '/data/';
+const PLACE_NOUN = {district:['district','districts'], block:['mandal','mandals'], panchayat:['gram panchayat','gram panchayats']};
+const CHILD_PLACE = {state:'district', district:'block', block:'panchayat'};
+const LEVEL = {all:'All works', category:'Category', sub_category:'Sub-category', work_type:'Work type', permissible_work:'Permissible work'};
+const KIDS_NOUN = {all:['category','categories'], category:['sub-category','sub-categories'], sub_category:['work type','work types'], work_type:['permissible work','permissible works']};
+const STATUS_COLOR = {'Approved':'--s-approved','New':'--s-new','On Going':'--s-going','Completed':'--s-done','physical complete':'--s-phys','Suspended':'--s-susp'};
+const cap = s => s ? s[0].toUpperCase()+s.slice(1) : s;
+const fmtN = v => Math.round(v??0).toLocaleString('en-IN');
+const fmtL = v => (v??0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtP = v => (!v ? '0' : v < 0.01 ? '<0.01' : v.toLocaleString('en-IN',{maximumFractionDigits:2})) + '%';
+const fmtPx = (pct, exp) => (!pct && exp > 0) ? '<0.01%' : fmtP(pct);
+const esc = v => String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const api = async (u, body) => (await fetch(u, body? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{})).json();
+let FILES = {};
+const getJSON = u => FILES[u] || (FILES[u] = fetch(u).then(r=>r.ok? r.json() : null).catch(()=>null));
+const forget = () => { FILES = {}; };
+const S = {view:'review', fy:null, w:'all', p:null, metric:'works', sort:null, st:null};
+
+// ---- the address bar holds the view, so links can be shared and Back works ---
+function toURL(push){
+  const q = new URLSearchParams();
+  if(S.view !== 'review') q.set('view', S.view);
+  if(S.w !== 'all') q.set('w', S.w);
+  if(S.p && S.st && S.p !== S.st.state) q.set('p', S.p);
+  if(S.fy) q.set('fy', S.fy);
+  if(S.metric !== 'works') q.set('rank', S.metric);
+  const u = location.pathname + (q.toString()? '?'+q : '');
+  if(u !== location.pathname+location.search) history[push?'pushState':'replaceState']({}, '', u);
+}
+function fromURL(){
+  const q = new URLSearchParams(location.search);
+  S.view = q.get('view')==='explore' ? 'explore' : 'review';
+  S.w = q.get('w') || 'all';
+  S.p = q.get('p') || q.get('block') || q.get('district') || null;     // older links used district/block
+  S.fy = q.get('fy') || S.fy;
+  S.metric = q.get('rank')==='expenditure' ? 'expenditure' : 'works';
+  document.querySelectorAll('#metric button').forEach(x=>x.classList.toggle('on', x.dataset.m===S.metric));
+}
+window.addEventListener('popstate', ()=>{ fromURL(); S.sort=null; load(false); });
+
+// ---- data --------------------------------------------------------------------
+const T = () => S.st.tree, A = () => S.st.areas;
+async function nodeFile(nid){ const n = T()[nid];
+  return (n && n.f && await getJSON(`${BASE}${S.fy}/node/${n.f}.json`)) || {values:{}, views:{}}; }
+async function placeFile(code){ return (await getJSON(`${BASE}${S.fy}/place/${code}.json`)) || {values:{}}; }
+const val = (f, key) => (f && f.values && f.values[key]) || [0,0,0];
+function placePath(code){ const out=[]; for(let c=code; c && A()[c]; c=A()[c].p) out.unshift(c); return out; }
+function workPath(nid){ const out=[]; for(let n=nid; n && T()[n]; n=T()[n].p) out.unshift(n); return out; }
+const kidsOf = code => S.st.children[code] || [];
+const short = nid => T()[nid].s;
+const head = nid => T()[nid].s.split(':')[0];          // 'Sub-Category I.2'
+// 'Category I: Water-Related…' -> code 'Category I', plain 'Water-Related…'
+const codeOf = nid => ['category','sub_category'].includes(T()[nid].l) ? head(nid) : LEVEL[T()[nid].l];
+const plain = nid => { const n = T()[nid]; return ['category','sub_category'].includes(n.l) ? n.n.split(':').slice(1).join(':').trim() : (n.l==='permissible_work' ? n.n : n.s); };
+// short name for titles and sentences: categories and sub-categories by their number
+const nice = nid => ['category','sub_category'].includes(T()[nid].l) ? head(nid) : T()[nid].s;
+function workPhrase(nid){ const n = T()[nid];
+  return n.l==='all' ? 'works' : (n.l==='permissible_work' || n.l==='work_type') ? `${n.s} works` : `works under ${head(nid)}`; }
+
+async function init(){
+  const m = await getJSON(BASE+'meta.json') || {fin_years:[]};
+  $('#fy').innerHTML = m.fin_years.map(y=>`<option>${y}</option>`).join('');
+  S.fy = m.fin_years[0];
+  fromURL(); $('#fy').value = S.fy;
+  if(!STATIC){ try{ const j = await api('/api/wp/meta'); watchJobs(j.jobs); }catch(e){} }
+  load(false);
+}
+
+async function load(push=true){
+  $('#view').classList.add('skel');
+  S.st = S.fy && await getJSON(`${BASE}${S.fy}/areas.json`);
+  if(!S.st || !S.st.state){
+    $('#view').classList.add('hidden'); $('#empty').classList.remove('hidden');
+    $('#empty').textContent = 'No data yet. Run the first pull of districts and mandals.'; return;
+  }
+  $('#empty').classList.add('hidden'); $('#view').classList.remove('hidden');
+  if(!S.p || !A()[S.p]) S.p = S.st.state;
+  if(!T()[S.w]) S.w = 'all';
+  toURL(push);
+  document.querySelectorAll('.tabs button').forEach(b=>{ b.classList.toggle('on', b.dataset.v===S.view); b.setAttribute('aria-selected', b.dataset.v===S.view); });
+  $('#review').classList.toggle('hidden', S.view!=='review');
+  $('#explore').classList.toggle('hidden', S.view!=='explore');
+  $('#what-pick').classList.toggle('hidden', S.view==='review');
+  $('#rank-box').classList.toggle('hidden', S.view==='review');
+  $('#controls').classList.toggle('review', S.view==='review');
+  $('#w-name').textContent = short(S.w);
+  $('#w-name').title = T()[S.w].n;
+  renderCrumbs(); renderAsOf();
+  if(S.view==='review') await renderReview(); else await renderExplore();
+  $('#view').classList.remove('skel');
+}
+
+function renderCrumbs(){
+  const wp = workPath(S.w), pp = placePath(S.p), lv = T()[S.w].l;
+  const order = ['all','category','sub_category','work_type','permissible_work'];
+  const at = order.indexOf(lv);
+  $('#ladder').innerHTML = S.view!=='explore' ? '' : '<span class="k">Level</span>' + order.map((l,i)=>{
+    const target = wp[i];        // the ancestor at that level, if we are below it
+    const cls = i===at ? 'on' : i<at ? 'done' : '';
+    return `<span class="${cls}" ${i<at ? `onclick="goWhat('${target}')" title="Go up to ${esc(T()[target].n)}"` : ''}>${LEVEL[l]}</span>`;
+  }).join('');
+  $('#crumb-what').innerHTML = S.view!=='explore' ? '' : '<span class="k">Work</span>' + wp.map((n,i)=>{
+    const t = T()[n], last = i===wp.length-1;
+    const txt = t.l==='all' ? 'All works' : `<span class="lv">${esc(codeOf(n))}</span>${esc(plain(n))}`;
+    return last ? `<b class="cseg" title="${esc(t.n)}">${txt}</b>` : `<a class="cseg" onclick="goWhat('${n}')" title="${esc(t.n)}">${txt}</a>`;
+  }).join(' › ');
+  $('#crumb-where').innerHTML = '<span class="k">Place</span>' + pp.map((c,i)=> i===pp.length-1
+      ? `<b>${esc(A()[c].n)}</b>` : `<a onclick="goPlace('${c}')">${esc(A()[c].n)}</a>`).join(' › ');
+}
+// heading: level and number small, the name itself large
+function setTitle(main, eyebrow, after){
+  $('#eyebrow').textContent = eyebrow || '';
+  $('#title').textContent = main;
+  $('#title').className = main.length > 110 ? 'vlong' : main.length > 60 ? 'long' : '';
+  $('#title-sub').textContent = after || '';
+}
+function renderAsOf(){
+  const t = S.st.as_of; if(!t){ $('#asof').textContent=''; return; }
+  const d = new Date(t), hrs = (Date.now()-d)/36e5;
+  $('#asof').textContent = `Portal figures as of ${d.toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}`
+    + (hrs > 30 ? ' · not updated in the last day' : '');
+  $('#asof').classList.toggle('old', hrs > 30);
+}
+
+function countTo(el, value, fmt){
+  if(el._anim) cancelAnimationFrame(el._anim);
+  el._final = fmt(value);
+  if(calm || document.hidden){ el.textContent = el._final; el._anim = null; return; }
+  const t0 = performance.now(), dur = 600;
+  const step = now => { const k = Math.min(1, Math.max(0, (now-t0)/dur)), e = 1-Math.pow(1-k,3);
+    el.textContent = fmt(value*e); el._anim = k<1 ? requestAnimationFrame(step) : null; };
+  el._anim = requestAnimationFrame(step);
+}
+function growBars(root){
+  const bars = (root||document).querySelectorAll('.track b, .sbar i');
+  if(calm || document.hidden){ bars.forEach(b=>{ b.style.transition='none'; b.style.width=b.dataset.w+'%'; }); return; }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>bars.forEach((b,i)=>{
+    b.style.transitionDelay=(i%12)*35+'ms'; b.style.width=b.dataset.w+'%'; })));
+}
+
+// the portal's status table for all works in a place
+function statusHTML(code, title){ return statusBar(A()[code].st, title); }
+function statusBar(st, title, compact){
+  if(!st || !st.length) return '';
+  const total = st.reduce((s,r)=>s+r[1],0) || 1;
+  const order = ['Completed','physical complete','On Going','Approved','New','Suspended'];
+  const rows = [...st].sort((a,b)=>order.indexOf(a[0])-order.indexOf(b[0]));
+  return `<div class="lbl" style="margin:0">${esc(title)}</div>
+    <div class="sbar" role="img" aria-label="${esc(rows.map(r=>`${r[0]} ${r[1]}`).join(', '))}">${rows.map(r=>`<i data-w="${(r[1]/total*100).toFixed(2)}"
+      title="${esc(r[0])}: ${fmtN(r[1])}" style="background:var(${STATUS_COLOR[r[0]]||'--faint'})"></i>`).join('')}</div>
+    <div class="slegend">${rows.map(r=>`<span><i class="sw" style="background:var(${STATUS_COLOR[r[0]]||'--faint'})"></i>${esc(cap(r[0]))}
+      <b>${fmtN(r[1])}</b> (${(r[1]/total*100).toFixed(1)}%)${compact ? '' : ` · ₹${fmtL(r[2])} L`}</span>`).join('')}</div>`;
+}
+
+// ============================ DAILY REVIEW ===================================
+async function renderReview(){
+  const P = S.p, a = A()[P];
+  setTitle(`Daily review`, '', `in ${a.n}`);
+  $('#rv-all').innerHTML = `<div><div class="lbl" style="margin:0">All works in ${esc(a.n)}</div>
+      <div style="font-size:24px;font-weight:600;font-variant-numeric:tabular-nums">${fmtN(a.w)}</div>
+      <div class="sub">Expenditure ₹${fmtL(a.e)} lakh</div></div>
+    <div>${statusHTML(P, 'Status of all works') || '<div class="sub">No status figures for this place.</div>'}</div>`;
+  const favs = S.st.favourites || [];
+  $('#wl-n').textContent = `(${favs.length})`;
+  $('#wl-hint').textContent = STATIC ? 'Set by the department. Status by mandal is shown for watched permissible works.'
+    : 'The department watchlist. Add any category, sub-category, work type or permissible work from Explore.';
+  if(!favs.length){ $('#cards').innerHTML = `<div class="status warn">The watchlist is empty.${STATIC ? '' : ' Open any work in Explore and choose “Add to watchlist”.'}</div>`; growBars($('#review')); return; }
+  const files = await Promise.all(favs.map(nodeFile));
+  const kids = kidsOf(P), cl = CHILD_PLACE[a.l];
+  const [one, many] = cl ? PLACE_NOUN[cl] : ['',''];
+  $('#cards').innerHTML = favs.map((nid, i) => {
+    const f = files[i], v = val(f, P), n = T()[nid];
+    const path = [...workPath(nid).slice(1,-1).map(head), n.l!=='permissible_work' ? LEVEL[n.l] : ''].filter(Boolean).join(' › ');
+    const rows = kids.map(c=>({c, v: val(f, c)}));
+    const none = rows.filter(r=>!r.v[0]), has = rows.filter(r=>r.v[0]).sort((x,y)=>y.v[0]-x.v[0]);
+    const view = (f.views||{})[P] || {attention:[]};
+    const top = view.attention.find(x=>x.level!=='what');
+    const link = r => `<a onclick="goPlace('${r.c}')"><span>${esc(A()[r.c].n)}</span><span>${r.v[0]? fmtN(r.v[0]) : 'none'}</span></a>`;
+    return `<article class="fav fade">
+      <div class="path" title="${esc(path)}">${esc(path)}</div>
+      <h3 title="${esc(n.n)}"><span class="star" aria-hidden="true">★</span> ${['category','sub_category'].includes(n.l) ? esc(codeOf(nid))+': ' : ''}${esc(plain(nid))}</h3>
+      <div class="nums"><div><b>${fmtN(v[0])}</b>works</div><div><b>${fmtL(v[1])}</b>expenditure, ₹ lakh</div><div><b>${fmtPx(v[2], v[1])}</b>% expenditure</div></div>
+      ${f.status && f.status[P] ? statusBar(f.status[P], 'Status', true) : ''}
+      ${cl && rows.length ? `<div class="line ${none.length? '':'ok'}">${none.length ? `<b>${none.length} of ${rows.length} ${many}</b> have no ${esc(workPhrase(nid))}`
+            : `Every ${one} has ${esc(workPhrase(nid))}`}${top? `<br>${esc(top.text)}`:''}</div>
+        <div class="mini"><div><h4>Most works</h4>${has.slice(0,3).map(link).join('') || '—'}</div>
+          <div><h4>${none.length ? 'No works' : 'Fewest works'}</h4>${(none.length? none.slice(0,3) : has.slice(-3).reverse()).map(link).join('')}</div></div>`
+        : (cl ? `<div class="line">Gram panchayat figures for ${esc(a.n)} are not available yet.</div>` : '')}
+      <div class="foot"><button class="act ghost" onclick="openExplore('${nid}')">Open in Explore</button>
+        ${cl && rows.length ? `<span class="sub">Click a ${esc(one)} to review it</span>` : ''}
+        ${STATIC ? '' : `<button class="rm" onclick="toggleWatch('${nid}')">Remove</button>`}</div>
+    </article>`;
+  }).join('');
+  growBars($('#review'));
+}
+
+// ============================ EXPLORE ========================================
+async function renderExplore(){
+  const P = S.p, a = A()[P], N = S.w, node = T()[N];
+  const [nf, pf] = await Promise.all([nodeFile(N), placeFile(P)]);
+  // All works: show the portal's own stated totals (adding rows up drifts by rounding)
+  const v = node.l==='all' ? [a.w, a.e, 100] : val(nf, P), cl = CHILD_PLACE[a.l];
+  S._nfv = v;
+  const kids = kidsOf(P).map(c=>{ const x = val(nf, c); return {code:c, name:A()[c].n, works:x[0], expenditure:x[1], pct:x[2],
+                                  area_works:A()[c].w, gp: A()[c].l==='block' ? kidsOf(c).length : null}; });
+  const parent = node.p && T()[node.p].l!=='all' ? ` · under ${codeOf(node.p)}${['category','sub_category'].includes(T()[node.p].l) ? '' : ': '+plain(node.p)}` : '';
+  renderWatchButton(N);
+  setTitle(node.l==='all' ? 'All works' : plain(N), node.l==='all' ? 'Every permissible work together' : codeOf(N) + parent, `in ${a.n}`);
+  countTo($('#k-works'), v[0], fmtN);
+  $('#k-works-n').textContent = node.l==='all' ? 'every permissible work together' : `out of ${fmtN(a.w)} works of all kinds`;
+  countTo($('#k-exp'), v[1], fmtL);
+  countTo($('#k-pct'), v[2], x => fmtPx(x, v[1]));
+  $('#k-pct-n').textContent = node.l==='all' ? 'all works together' : `of all expenditure in ${a.n} (₹${fmtL(a.e)} lakh) went to ${nice(N)}`;
+  const zero = kids.filter(k=>!k.works);
+  if(cl){
+    $('#k-zero-l').textContent = `${cap(PLACE_NOUN[cl][1])} with no works`;
+    $('#k-zero').textContent = kids.length ? `${zero.length} of ${kids.length}` : 'Not yet';
+    $('#k-zero-n').textContent = kids.length ? `have no ${workPhrase(N)}` : `${PLACE_NOUN[cl][0]} figures not available yet`;
+  } else { $('#k-zero-l').textContent = 'Place level'; $('#k-zero').textContent = 'Gram panchayat'; $('#k-zero-n').textContent = 'the lowest level'; }
+  const own = node.l!=='all' && nf.status && nf.status[P];
+  $('#status-box').innerHTML = own
+    ? statusBar(own, `Status of ${nice(N)} in ${a.n}`)
+    : statusHTML(P, `Status of all works in ${a.n}`) + (node.l==='all' ? '' : `<div class="sub" style="margin-top:4px">Status for
+      ${esc(nice(N))} alone is not available here yet${a.l==='district'||a.l==='state' ? ' (it is brought in weekly for the state and districts)' : a.l==='block' ? ' (it is brought in nightly for watched permissible works only)' : ' (not brought in at gram panchayat level)'}.</div>`);
+
+  const noGp = a.l==='block' && !kids.length;
+  $('#missing').classList.toggle('hidden', !noGp);
+  $('#where-card').classList.toggle('hidden', !cl || noGp);
+  if(noGp){
+    $('#missing-h').textContent = `Gram panchayat figures for ${a.n} are not available yet`;
+    $('#missing-p').textContent = 'The figures above are for the mandal as a whole, from the portal. Its gram panchayats have not been brought in yet.';
+    $('#missing-acts').innerHTML = STATIC ? `<button class="act" onclick="goPlace('${a.p}')">See all mandals in ${esc(A()[a.p].n)}</button>`
+      : `<button class="act" onclick="fetchGps()">Bring in its gram panchayats now</button>`;
+  }
+
+  const view = (nf.views||{})[P] || {check:null, attention:[]};
+  renderAttention(view.attention);
+  let notes = '';
+  const day = d => new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  if(view.check && view.check.compared===false) notes += `<div class="status warn">The ${PLACE_NOUN[cl][1]}' figures were read from the portal on
+      ${view.check.kids_days.map(day).join(', ')} and ${esc(a.n)}'s on ${day(view.check.parent_day)}, so they are not compared:
+      the portal changes from day to day.</div>`;
+  else if(view.check) notes += view.check.ok
+    ? `<div class="status ok">✓ The ${PLACE_NOUN[cl][1]}' figures add up to ${esc(a.n)}'s total on the portal. <details><summary>What this means</summary>
+       The portal's numbers are consistent with each other. It does not prove the works exist on the ground.</details></div>`
+    : `<div class="status bad">The ${PLACE_NOUN[cl][1]}' figures do not add up to ${esc(a.n)}'s total: ${fmtN(view.check.works[0])} against ${fmtN(view.check.works[1])} works.</div>`;
+  const failed = S.st.failed[P] || [];
+  if(failed.length && cl) notes += `<div class="status warn">${failed.length} ${PLACE_NOUN[cl][1]} could not be loaded: ${failed.map(f=>esc(f.name)).join(', ')}.</div>`;
+  $('#notes').innerHTML = notes;
+
+  renderWhat(N, P, pf);
+  if(cl && !noGp) renderWhere(kids, cl);
+  S._kids = kids;
+  await renderGrid(N, cl, kids);
+  renderTable(kids, cl);
+  growBars($('#explore'));
+  setTimeout(scrollShadows, 0);   // not tied to animation frames, which pause in background tabs
+}
+
+function renderWhat(N, P, pf){
+  const node = T()[N], a = A()[P], key = S.metric==='works' ? 0 : 1;
+  const fmt = S.metric==='works' ? fmtN : x=>'₹'+fmtL(x);
+  // the lowest level: compare with the other permissible works in the same work type
+  const leaf = !node.c.length, group = leaf ? node.p : N, gnode = T()[group];
+  const [one, many] = KIDS_NOUN[gnode.l];
+  const rows = gnode.c.map(c=>({c, v: val(pf, c), everywhere: T()[c].w}));
+  const has = rows.filter(r=>r.v[0]||r.v[1]).sort((x,y)=>y.v[key]-x.v[key]);
+  const none = rows.filter(r=>!(r.v[0]||r.v[1]));
+  const active = none.filter(r=>r.everywhere), never = none.filter(r=>!r.everywhere);
+  $('#what-h').textContent = leaf ? `Works done in ${a.n} · other ${many} in ${plain(group)}`
+                                  : `Works done in ${a.n} · by ${one}`;
+  $('#what-hint').textContent = leaf
+    ? `${plain(N)} is highlighted. These are the ${many} in the same work type, ranked by ${S.metric}.`
+    : `The ${many} under ${node.l==='all' ? 'all works' : nice(N)} (one level down), ranked by ${S.metric}. Click one to open it.`;
+  const max = Math.max(...has.map(r=>r.v[key]), 0) || 1;
+  // categories and sub-categories keep their number in front: 'I.2 Construction or…'
+  const nm = c => { const t = T()[c];
+    if(t.l==='permissible_work') return esc(t.n);
+    const code = t.l==='category' ? head(c).replace('Category ','') : t.l==='sub_category' ? head(c).replace('Sub-Category ','') : '';
+    return (code ? `<span class="code">${esc(code)}</span>` : '') + esc(plain(c)); };
+  $('#what-list').innerHTML = has.map((r,i)=>`<li class="${r.c===N?'cur':''}" onclick="goWhat('${r.c}')" title="${esc(T()[r.c].n)}"><span class="i">${i+1}</span>
+      <span class="nm">${nm(r.c)}</span><span class="track"><b data-w="${(r.v[key]/max*100).toFixed(1)}"></b></span><span class="val">${fmt(r.v[key])}</span></li>`).join('')
+    + (active.length ? `<li class="sep">No works in ${esc(a.n)}, though done elsewhere in the state</li>` + active.map(r=>`<li class="none ${r.c===N?'cur':''}" onclick="goWhat('${r.c}')" title="${esc(T()[r.c].n)}">
+      <span class="i"></span><span class="nm">${nm(r.c)}</span><span></span><span class="val"><span class="zero-badge">0</span></span></li>`).join('') : '')
+    + (never.length ? `<li class="sep">No works anywhere in the state this year</li>` + never.map(r=>`<li class="none dead ${r.c===N?'cur':''}" title="${esc(T()[r.c].n)}: no works anywhere in the state this year, so there is nothing to open">
+      <span class="i"></span><span class="nm">${nm(r.c)}</span><span></span><span class="val"><span class="zero-badge">0</span></span></li>`).join('') : '');
+}
+
+function renderWhere(kids, cl){
+  const [one, many] = PLACE_NOUN[cl], key = S.metric;
+  const has = kids.filter(k=>k.works>0).sort((x,y)=>y[key]-x[key]), none = kids.filter(k=>!k.works);
+  $('#where-h').textContent = `${S.w==='all' ? 'All works' : nice(S.w)+' works'} · by ${one}`;
+  $('#where-hint').textContent = `The ${many} of ${A()[S.p].n}: top 10 and lowest 5 by ${key}, then those with no works. Click one to open it.`;
+  const max = Math.max(...has.map(k=>k[key]), 0) || 1, fmt = key==='works' ? fmtN : x=>'₹'+fmtL(x);
+  const li = (k,i) => `<li onclick="goPlace('${k.code}')"><span class="i">${i+1}</span><span class="nm">${esc(k.name)}</span>
+      <span class="track"><b data-w="${(k[key]/max*100).toFixed(1)}"></b></span><span class="val">${fmt(k[key])}</span></li>`;
+  const top = has.slice(0,10), bottom = has.length > 10 ? has.slice(-Math.min(5, has.length-10)) : [];
+  $('#where-list').innerHTML = top.map(li).join('')
+    + (bottom.length ? `<li class="sep">Lowest ${bottom.length}</li>` + bottom.map((k,i)=>li(k, has.length-bottom.length+i)).join('') : '')
+    + (none.length ? `<li class="sep">${none.length} ${none.length===1?one:many} with no works</li>` + none.slice(0,12).map(k=>`<li class="none" onclick="goPlace('${k.code}')">
+       <span class="i"></span><span class="nm">${esc(k.name)}</span><span></span><span class="val">no works</span></li>`).join('') : '');
+}
+
+// places down the side, the next level of work across; red cells: nothing of that kind there
+async function renderGrid(N, cl, kids){
+  const node = T()[N], cols = node.c.filter(c=>T()[c].w>0);
+  const show = cl && kids.length && cols.length >= 2 && cols.length <= 40;
+  $('#mx-card').classList.toggle('hidden', !show);
+  if(!show) return;
+  const files = await Promise.all(cols.map(nodeFile));
+  const [one, many] = PLACE_NOUN[cl], [, kmany] = KIDS_NOUN[node.l], a = A()[S.p];
+  $('#mx-h').textContent = `${cap(many)} × ${kmany}: number of works`;
+  $('#mx-hint').textContent = `Red cells: no works of that kind in that ${one}. Click a heading to sort, a row to open it. Scroll sideways for more columns.`;
+  const head = c => { const t = T()[c];
+    const code = t.l==='category' ? codeOf(c) : t.l==='sub_category' ? codeOf(c) : '';
+    return `${code ? `<span class="code">${esc(code)}</span>` : ''}${esc(t.l==='permissible_work' ? t.n : plain(c))}`; };
+  const rows = kids.map(k=>({code:k.code, name:k.name, v: cols.map((c,i)=>val(files[i], k.code)[0])}));
+  const s = S.msort || {k:'name', dir:1};
+  const ci = s.k==='name' ? -1 : cols.indexOf(s.k);
+  rows.sort((x,y)=> ci<0 ? s.dir*x.name.localeCompare(y.name) : s.dir*(x.v[ci]-y.v[ci]));
+  const tot = cols.map((c,i)=>val(files[i], S.p)[0]);
+  $('#mx').innerHTML = `<table><thead><tr>${sortTh('name', cap(one), s, '', 'gridSort')}${cols.map(c=>sortTh(c, head(c), s, '', 'gridSort')).join('')}</tr></thead>
+    <tbody><tr class="tot"><td>Total: ${esc(a.n)}</td>${tot.map(w=>`<td>${fmtN(w)}</td>`).join('')}</tr>
+    ${rows.map(r=>`<tr class="click" onclick="goPlace('${r.code}')"><td>${esc(r.name)}</td>${r.v.map(w=>`<td class="${w? '':'c0'}">${fmtN(w)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  setTimeout(scrollShadows, 0);   // not tied to animation frames, which pause in background tabs
+}
+function gridSort(k){ const s = S.msort || {k:'name', dir:1}; S.msort = {k, dir: s.k===k ? -s.dir : (k==='name'?1:-1)}; renderGrid(S.w, CHILD_PLACE[A()[S.p].l], S._kids); }
+
+function renderAttention(list){
+  const box = $('#attention');
+  if(!list.length){ box.innerHTML = `<div class="attn clear fade"><h3>Needs attention</h3><div class="d">Nothing stands out here.</div></div>`; return; }
+  const chip = it => T()[it.code] ? `<span class="chip" onclick="goWhat('${it.code}')" title="${esc(T()[it.code].n)}">${esc(short(it.code))}</span>`
+    : A()[it.code] ? `<span class="chip" onclick="goPlace('${it.code}')">${esc(A()[it.code].n)}</span>` : '';
+  box.innerHTML = `<div class="attn fade"><h3>Needs attention</h3>` + list.map((f,k)=>{
+    const first = f.items.slice(0,14), rest = f.items.slice(14);
+    return `<div class="f"><div class="t">${esc(f.text)}</div><div class="d">${esc(f.detail)}</div>
+      <div class="chips">${first.map(chip).join('')}${rest.length? `<span class="hidden" id="more-${k}">${rest.map(chip).join('')}</span>
+      <button class="more" onclick="this.remove();$('#more-${k}').classList.remove('hidden')">+ ${rest.length} more</button>`:''}</div></div>`;
+  }).join('') + `</div>`;
+}
+
+function renderTable(kids, cl){
+  $('#tablewrap').classList.toggle('hidden', !kids.length);
+  if(!kids.length) return;
+  const [one, many] = PLACE_NOUN[cl], a = A()[S.p], N = S.w;
+  const cols = [['name', cap(one), false], ['works','Works',true], ['expenditure','Expenditure (₹ lakh)',true],
+                ['pct','% expenditure',true], ['area_works','Works of all kinds',true]];
+  if(cl==='block') cols.push(['gp','Gram panchayat figures',false]);
+  const s = S.sort || {k:S.metric, dir:-1};
+  const rows = [...kids].sort((x,y)=> s.k==='name' ? s.dir*x.name.localeCompare(y.name) : s.dir*((x[s.k]||0)-(y[s.k]||0)));
+  // total row: the place's own figures on the portal (as the portal puts its Total on top)
+  const tv = N==='all' ? [a.w, a.e, 100] : (S._nfv || [0,0,0]);
+  $('#tbl thead').innerHTML = '<tr>'+cols.map(([k,l,num])=>sortTh(k, l, s, num?'num':'', 'sortBy')).join('')+'</tr>';
+  $('#tbl tbody').innerHTML = `<tr class="tot"><td>Total: ${esc(a.n)} (${kids.length} ${many})</td><td class="num">${fmtN(tv[0])}</td>
+      <td class="num">${fmtL(tv[1])}</td><td class="num">${fmtP(tv[2])}</td><td class="num">${fmtN(a.w)}</td>${cl==='block' ? `<td>${kids.filter(k=>k.gp).length} of ${kids.length} loaded</td>` : ''}</tr>`
+    + rows.map(r=>`<tr class="click" onclick="goPlace('${r.code}')"><td>${esc(r.name)}</td>
+    <td class="num ${r.works?'':'z'}">${fmtN(r.works)}</td><td class="num ${r.expenditure?'':'z'}">${fmtL(r.expenditure)}</td>
+    <td class="num ${r.pct||r.expenditure?'':'z'}">${fmtPx(r.pct, r.expenditure)}</td><td class="num">${fmtN(r.area_works)}</td>
+    ${cl==='block' ? `<td>${r.gp ? `<span class="gp">✓ ${r.gp} loaded</span>` : `<span class="gp no">Not yet</span>`}</td>` : ''}</tr>`).join('');
+}
+// header cell with a visible sort marker; s = {k, dir}
+const sortTh = (k, label, s, cls, fn) => `<th class="${cls||''} ${s.k===k?'on':''}" onclick="${fn}('${k}')" title="Sort by ${esc(label.replace(/<[^>]+>/g,''))}">${label}<span class="sort">${s.k===k ? (s.dir<0?'▼':'▲') : '↕'}</span></th>`;
+function sortBy(k){ const s=S.sort||{k:S.metric,dir:-1}; S.sort={k, dir: s.k===k? -s.dir : (k==='name'?1:-1)}; renderExplore(); }
+
+// show an edge shadow where a table has more columns beyond what is visible
+function scrollShadows(){
+  document.querySelectorAll('.scrollbox').forEach(box=>{
+    const sc = box.firstElementChild; if(!sc) return;
+    const max = sc.scrollWidth - sc.clientWidth;
+    box.classList.toggle('more-left', sc.scrollLeft > 2);
+    box.classList.toggle('more-right', max > 2 && sc.scrollLeft < max - 2);
+    if(!sc._shadowed){ sc._shadowed = true; sc.addEventListener('scroll', scrollShadows, {passive:true}); }
+  });
+}
+window.addEventListener('resize', scrollShadows);
+
+// ---- department watchlist: read-only on the published site, editable in the local app
+const watched = nid => (S.st.favourites || []).includes(nid);
+function renderWatchButton(nid){
+  const slot = $('#watch-slot');
+  if(S.view!=='explore' || nid==='all'){ slot.innerHTML=''; return; }
+  if(STATIC){ slot.innerHTML = watched(nid) ? '<span class="watch on badge" title="On the department watchlist, shown in Daily review">★ On the watchlist</span>' : ''; return; }
+  slot.innerHTML = watched(nid)
+    ? `<button class="watch on" onclick="toggleWatch('${nid}')" title="Remove from the department watchlist">★ On the watchlist</button>`
+    : `<button class="watch" onclick="toggleWatch('${nid}')" title="Show this in Daily review for everyone">☆ Add to watchlist</button>`;
+}
+async function toggleWatch(nid, quiet){
+  if(STATIC) return;
+  const action = watched(nid) ? 'remove' : 'add';
+  const r = await api('/api/watchlist', {fy:S.fy, node:nid, action});
+  if(r.error){ showToast(r.error); return; }
+  S.st.favourites = r.favourites; forget();
+  const label = T()[nid].l==='permissible_work' ? plain(nid) : nice(nid);
+  if(!quiet) showToast(action==='add' ? `Added “${label}” to the watchlist` : `Removed “${label}” from the watchlist`,
+                       () => toggleWatch(nid, true));
+  await load(false);
+  if(!$('#w-pop').hidden) drawTree();
+}
+let toastTimer = null;
+function showToast(text, undo){
+  $('#toast-t').textContent = text; $('#toast').classList.remove('hidden');
+  $('#toast-undo').classList.toggle('hidden', !undo);
+  $('#toast-undo').onclick = () => { $('#toast').classList.add('hidden'); undo && undo(); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>$('#toast').classList.add('hidden'), 6000);
+}
+
+// ---- navigation --------------------------------------------------------------
+function goPlace(code){ S.p = code; S.sort=null; S.msort=null; closeAll(); load(); }
+function goWhat(nid){
+  // a group whose only child has the same name (e.g. 'On the portal, not in the MoRD list'
+  // at category, sub-category and work type) opens the level that actually has the list
+  while(T()[nid] && T()[nid].c.length===1 && T()[T()[nid].c[0]].n===T()[nid].n) nid = T()[nid].c[0];
+  S.w = nid; S.sort=null; S.msort=null; S.view='explore'; closeAll(); load(); }
+function openExplore(nid){ goWhat(nid); }
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ S.view=b.dataset.v; S.sort=null; load(); });
+document.querySelectorAll('#metric button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#metric button').forEach(x=>x.classList.toggle('on', x===b)); S.metric=b.dataset.m; S.sort=null; toURL(false); renderExplore(); });
+$('#fy').addEventListener('change', ()=>{ S.fy=$('#fy').value; load(); });
+
+// ---- work tree: Category > Sub-category > Work type > Permissible work, each with
+// its number of works in the current place ---------------------------------------
+let OPEN = new Set(['all']), TSEL = -1, PF = null;
+async function openTree(){
+  PF = await placeFile(S.p);
+  workPath(S.w).forEach(n=>OPEN.add(n));
+  $('#w-pop').hidden = false; $('#w-btn').setAttribute('aria-expanded','true');
+  $('#w-q').value=''; drawTree(); $('#w-q').focus();
+  const cur = $('#w-tree .cur'); if(cur) cur.scrollIntoView({block:'center'});
+}
+function closeTree(){ $('#w-pop').hidden = true; $('#w-btn').setAttribute('aria-expanded','false'); }
+function drawTree(){
+  const q = $('#w-q').value.trim().toLowerCase(), place = A()[S.p].n;
+  const works = n => val(PF, n)[0];
+  const row = (n, depth, toggle) => { const t = T()[n], w = works(n);
+    return `<div class="tn ${w? '':'zero'} ${n===S.w?'cur':''}" role="treeitem" data-n="${esc(n)}" style="padding-left:${10+depth*16}px"
+      ${toggle!==undefined ? `aria-expanded="${toggle}"` : ''}>
+      ${toggle!==undefined ? `<button class="tw" data-t="${esc(n)}" aria-label="${toggle?'Collapse':'Expand'}">${toggle?'▾':'▸'}</button>` : '<span class="tw"></span>'}
+      <span class="nm">${t.l!=='permissible_work' && t.l!=='all' ? `<span class="lv">${LEVEL[t.l]}</span>` : ''}${esc(t.l==='permissible_work'? t.n : t.s)}</span>
+      <small>${w? fmtN(w)+' works' : 'no works'}</small>
+      ${n==='all' ? '' : STATIC ? `<span class="ws ${watched(n)?'on':''}" ${watched(n)?'title="On the watchlist"':''}>${watched(n)?'★':''}</span>`
+        : `<button class="ws ${watched(n)?'on':''}" data-w="${esc(n)}" aria-label="${watched(n)?'Remove from':'Add to'} watchlist" title="${watched(n)?'On the watchlist (click to remove)':'Add to watchlist'}">${watched(n)?'★':'☆'}</button>`}</div>`; };
+  let html = '';
+  const favs = S.st.favourites || [];
+  if(favs.length && !q) html += `<div class="tg">★ Watchlist · ${esc(place)}</div>` + favs.map(n=>row(n,0)).join('');
+  html += `<div class="tg">MoRD list of permissible works · works in ${esc(place)}</div>`;
+  if(q){
+    const hits = Object.keys(T()).filter(n=>n!=='all' && T()[n].n.toLowerCase().includes(q)).slice(0,80);
+    html += hits.map(n=>row(n,0)).join('') || `<div class="tn">No match for “${esc(q)}”.</div>`;
+  } else {
+    const walk = (n, d) => { const t = T()[n], open = OPEN.has(n);
+      html += row(n, d, t.c.length ? open : undefined);
+      if(open) t.c.forEach(c=>walk(c, d+1)); };
+    walk('all', 0);
+  }
+  $('#w-tree').innerHTML = html; TSEL = -1;
+}
+$('#w-btn').onclick = () => $('#w-pop').hidden ? openTree() : closeTree();
+$('#w-q').addEventListener('input', drawTree);
+$('#w-tree').addEventListener('click', e=>{
+  const st = e.target.closest('.ws[data-w]');
+  if(st){ e.stopPropagation(); toggleWatch(st.dataset.w); return; }
+  const t = e.target.closest('.tw[data-t]');
+  if(t){ e.stopPropagation(); const n=t.dataset.t; OPEN.has(n)? OPEN.delete(n) : OPEN.add(n); drawTree(); return; }
+  const r = e.target.closest('.tn[data-n]'); if(r){ closeTree(); goWhat(r.dataset.n); }
+});
+$('#w-q').addEventListener('keydown', e=>{
+  const rs=[...document.querySelectorAll('#w-tree .tn[data-n]')];
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); TSEL=Math.max(0,Math.min(rs.length-1,TSEL+(e.key==='ArrowDown'?1:-1)));
+    rs.forEach((r,i)=>r.classList.toggle('sel',i===TSEL)); rs[TSEL]&&rs[TSEL].scrollIntoView({block:'nearest'}); }
+  else if(e.key==='ArrowRight' && rs[TSEL]){ OPEN.add(rs[TSEL].dataset.n); const k=TSEL; drawTree(); TSEL=k; }
+  else if(e.key==='ArrowLeft' && rs[TSEL]){ OPEN.delete(rs[TSEL].dataset.n); const k=TSEL; drawTree(); TSEL=k; }
+  else if(e.key==='Enter' && rs[TSEL>=0?TSEL:0]){ closeTree(); goWhat(rs[TSEL>=0?TSEL:0].dataset.n); }
+  else if(e.key==='Escape'){ closeTree(); $('#w-btn').focus(); }
+});
+
+// ---- place search --------------------------------------------------------------
+let sT=null, sSel=-1, sHits=[];
+$('#q').addEventListener('input', ()=>{ clearTimeout(sT); sT=setTimeout(search,160); });
+$('#q').addEventListener('keydown', e=>{
+  const items=[...$('#results').children].filter(x=>x.dataset.i!=null);
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); sSel=Math.max(0,Math.min(items.length-1,sSel+(e.key==='ArrowDown'?1:-1)));
+    items.forEach((x,i)=>x.classList.toggle('sel',i===sSel)); }
+  else if(e.key==='Enter' && items[sSel>=0?sSel:0]) pick(+items[sSel>=0?sSel:0].dataset.i);
+  else if(e.key==='Escape') closeSearch();
+});
+function search(){
+  const q=$('#q').value.trim().toLowerCase(); if(q.length<2){ closeSearch(); return; }
+  const order={district:0, block:1, panchayat:2};
+  sHits = Object.entries(A()).filter(([c,a])=>a.l!=='state' && a.n.toLowerCase().includes(q))
+    .map(([c,a])=>({c, a, where:[a.l!=='district'&&A()[a.d]?A()[a.d].n:'', a.l==='panchayat'&&A()[a.b]?A()[a.b].n:''].filter(Boolean).join(' › ')}))
+    .sort((x,y)=>order[x.a.l]-order[y.a.l] || x.a.n.toLowerCase().indexOf(q)-y.a.n.toLowerCase().indexOf(q)).slice(0,12);
+  sSel=-1;
+  const lbl={district:'district', block:'mandal', panchayat:'gram panchayat'};
+  $('#results').innerHTML = sHits.length ? sHits.map((h,i)=>`<div data-i="${i}" onclick="pick(${i})"><span class="tag">${lbl[h.a.l]}</span>${esc(h.a.n)}<small>${esc(h.where)}</small></div>`).join('')
+    : `<div>No match.</div>`;
+  $('#results').hidden=false; $('#q').setAttribute('aria-expanded','true');
+}
+function pick(i){ const h=sHits[i]; closeSearch(); $('#q').value=''; goPlace(h.c); }
+function closeSearch(){ $('#results').hidden=true; $('#q').setAttribute('aria-expanded','false'); }
+function closeAll(){ closeTree(); closeSearch(); }
+document.addEventListener('click', e=>{ if(!e.target.closest('#what-pick')) closeTree(); if(!e.target.closest('#place-pick')) closeSearch(); });
+
+// ---- local app only: gram panchayats on demand, refresh --------------------------
+async function fetchGps(){
+  const a = A()[S.p];
+  const r = await api('/api/wp/fetch-gps', {fy:S.fy, district:a.d, block:S.p});
+  if(r.error){ $('#missing-acts').innerHTML = `<div class="status bad">${esc(r.error)}</div>`; return; }
+  const want = S.p; let start=null;
+  $('#missing-acts').innerHTML = `<span id="gp-cur">Connecting to the portal…</span><div class="meter wait" id="gp-meter"><b id="gp-bar"></b></div><span class="sub" id="gp-eta"></span>`;
+  const t = setInterval(async ()=>{
+    const j = await api('/api/wp/job/'+r.job);
+    if(S.p!==want){ clearInterval(t); return; }
+    if(j.status==='queued'||j.status==='waiting'){ $('#gp-cur').textContent='Waiting for another portal job to finish…'; return; }
+    if(j.status==='running'){ if(!j.total){ $('#gp-cur').textContent='Finding the gram panchayats…'; return; }
+      $('#gp-meter').classList.remove('wait'); if(start===null) start={n:j.done,t:Date.now()};
+      $('#gp-cur').textContent=`${j.done} of ${j.total} gram panchayats: ${j.current}`; $('#gp-bar').style.width=(j.done/j.total*100)+'%';
+      const rate=(j.done-start.n)/((Date.now()-start.t)/1000);
+      if(rate>0){ const left=Math.ceil((j.total-j.done)/rate); $('#gp-eta').textContent=`About ${left<60? left+' seconds':Math.ceil(left/60)+' minutes'} left.`; }
+      return; }
+    clearInterval(t);
+    if(j.status==='error'){ $('#missing-acts').innerHTML=`<div class="status bad">Could not bring in the gram panchayats: ${esc(j.error)}</div><button class="act ghost" onclick="fetchGps()">Try again</button>`; return; }
+    forget(); setTimeout(()=>load(false), 300);
+  }, 1000);
+}
+async function refresh(){
+  const r = await api('/api/wp/refresh', {fy:S.fy});
+  if(r.error){ document.querySelectorAll('.refresh-msg').forEach(m=>m.textContent = r.error+' '); return; }
+  watchJobs([{id:r.job, kind:'refresh'}]);
+}
+function watchJobs(jobs){
+  const j0=(jobs||[]).find(j=>j.kind==='refresh'); if(!j0) return;
+  const btn=$('#refresh'); if(btn) btn.disabled=true;
+  const t=setInterval(async ()=>{ const j=await api('/api/wp/job/'+j0.id); const say=s=>document.querySelectorAll('.refresh-msg').forEach(m=>m.textContent=s);
+    if(j.status==='waiting'){ say('Waiting for another portal job… '); return; }
+    if(j.status==='queued'||j.status==='running'){ say(j.total? `Updating: ${j.done} of about ${j.total} (${j.current}) ` : 'Starting… '); return; }
+    clearInterval(t); if(btn) btn.disabled=false; forget(); say(j.status==='done'? 'Updated. ' : `Stopped: ${j.error} `); load(false); }, 3000);
+}
+if(!STATIC && $('#refresh')) $('#refresh').onclick = refresh;
+
+// ---- print report ----------------------------------------------------------------
+$('#printbtn').onclick = () => {
+  const when = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+  $('#printhead').innerHTML = `<b>VB-G RAM G · ${esc(placePath(S.p).map(c=>A()[c].n).join(' › '))} · ${S.view==='review' ? 'Daily review' : esc(short(S.w))}</b><br>
+    Printed ${when} · ${esc($('#asof').textContent)} · Financial year ${esc(S.fy)}<br>Unofficial view built from the public VB-G RAM G MIS (vbgramgrep.dord.gov.in). Not a Government of India website.`;
+  document.querySelectorAll('.more').forEach(b=>b.click());
+  document.querySelectorAll('.track b, .sbar i').forEach(b=>b.style.width=b.dataset.w+'%');
+  document.querySelectorAll('.kpi .v').forEach(v=>{ if(v._anim) cancelAnimationFrame(v._anim); if(v._final) v.textContent=v._final; });
+  document.querySelectorAll('details').forEach(d=>d.open=true);
+  window.print();
+};
+
+init();
+</script>
+</body>
+</html>
